@@ -1,0 +1,9 @@
+djangorestframework
+boto3
+django-storages
+django_redis
+celery
+ffmpeg-python
+python-dotenv
+requests
+django-cors-headers

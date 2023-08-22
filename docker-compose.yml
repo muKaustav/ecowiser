@@ -1,0 +1,101 @@
+version: '3'
+
+services:
+  django:
+    build:
+      context: ./ecowiser-django
+      dockerfile: Dockerfile.django
+    ports:
+      - '8000:8000'
+    volumes:
+      - ./ecowiser-django:/app
+    depends_on:
+      - redis
+    networks:
+      - djnet
+
+  celery_worker:
+    build:
+      context: ./ecowiser-django
+      dockerfile: Dockerfile.celery # Specify the path to your Celery Dockerfile
+    volumes:
+      - ./ecowiser-django:/app
+    depends_on:
+      - redis
+    networks:
+      - djnet
+
+  node-ccextractor:
+    build:
+      context: ./ecowiser-ccextractor-node
+      dockerfile: Dockerfile.node
+    ports:
+      - '5000:5000'
+    volumes:
+      - ./ecowiser-ccextractor-node:/app
+    depends_on:
+      - redis
+    networks:
+      - djnet
+
+  node-elastic:
+    image: node:20-alpine
+    container_name: tqd-node
+    build:
+      context: ./ecowiser-elasticsearch
+      dockerfile: Dockerfile.elastic
+    ports:
+      - 5001:5001
+    environment:
+      - NODE_ENV=local
+      - ES_HOST=elasticsearch
+      - NODE_PORT=5001
+      - ELASTIC_URL=http://elasticsearch:9200
+    volumes:
+      - ./ecowiser-elasticsearch:/usr/src/app/subtitles
+    command: npm run start
+    depends_on:
+      - elasticsearch
+    networks:
+      - djnet
+
+  elasticsearch:
+    container_name: tqd-elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.1
+    volumes:
+      - djdata:/usr/share/elasticsearch/data
+    environment:
+      - bootstrap.memory_lock=true
+      - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
+      - discovery.type=single-node
+    logging:
+      driver: none
+    ports:
+      - 9300:9300
+      - 9200:9200
+    networks:
+      - djnet
+
+  redis:
+    image: 'redis:latest'
+    ports:
+      - '6379:6379'
+    networks:
+      - djnet
+
+  kibana:
+    container_name: tqd-kibana
+    image: docker.elastic.co/kibana/kibana:7.15.1
+    ports:
+      - 5601:5601
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - djnet
+
+volumes:
+  djdata:
+
+networks:
+  djnet:
+    driver: bridge
