@@ -70,7 +70,7 @@ def upload_to_dynamodb(self, video_url, subtitles):
 def update_elasticsearch(self, subtitles):
     payload = {"subtitles": subtitles}
 
-    url = "http://172.31.219.82:5001/subtitles/bulk/"
+    url = "http://172.22.192.248:5001/subtitles/bulk/"
 
     headers = {"Content-Type": "application/json;charset=utf-8"}
 
@@ -98,7 +98,7 @@ def extract_subtitles(self, video_url):
 
     payload = json.dumps({"url": part_to_extract})
 
-    url = "http://172.31.219.82:5000/extract"
+    url = "http://172.22.192.248:5000/extract"
 
     headers = {"Content-Type": "application/json"}
 

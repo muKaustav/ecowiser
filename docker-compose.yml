@@ -32,7 +32,7 @@ services:
     ports:
       - '5000:5000'
     volumes:
-      - ./ecowiser-ccextractor-node:/app
+      - ./ecowiser-ccextractor-node:/usr/src/app/ccextractor
     depends_on:
       - redis
     networks:
