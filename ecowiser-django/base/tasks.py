@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 from celery import shared_task
 from celery.utils.log import get_task_logger
+import os
 import json
 import requests
 import boto3
@@ -49,7 +50,11 @@ def parse_srt(srt_data, video_url):
 
 @shared_task(bind=True)
 def upload_to_dynamodb(self, video_url, subtitles):
-    dynamodb = boto3.resource('dynamodb', region_name='ap-south-1')
+    dynamodb = boto3.resource('dynamodb',
+                              aws_access_key_id='AKIATKLDN25FNYEBBMNZ',
+                              aws_secret_access_key='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',
+                              region_name='ap-south-1')
+
     table = dynamodb.Table('ecowiser-subtitles')
 
     try:
@@ -109,17 +114,17 @@ def extract_subtitles(self, video_url):
     counter, batches = 0, []
 
     for subtitle in subtitles:
-        # upload_to_dynamodb.delay(video_url, subtitle)
+        upload_to_dynamodb.delay(video_url, subtitle)
 
         if counter == 100:
-            update_elasticsearch.delay(batches)
+            # update_elasticsearch.delay(batches)
             batches, counter = [], 0
 
         batches.append(subtitle)
 
         counter += 1
 
-    if len(batches) > 0:
-        update_elasticsearch.delay(batches)
+    # if len(batches) > 0:
+    #     update_elasticsearch.delay(batches)
 
     return subtitles
